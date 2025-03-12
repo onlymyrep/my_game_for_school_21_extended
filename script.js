@@ -1,13 +1,3 @@
-const hints = [
-    "строка",    // Уровень 1
-    "столбик",   // Уровень 2
-    "одинаковые", // Уровень 3
-    "квадрат",   // Уровень 4
-    "крест",     // Уровень 5
-    "буква s",   // Уровень 6
-    "буква c"    // Уровень 7
-];
-
 function checkWin() {
     const cells = elements.board.children;
 
@@ -34,11 +24,39 @@ function checkWin() {
             return true;
 
         case 3:
-            // Уровень 3: Все эмодзи должны быть одинаковыми
-            const firstEmoji = cells[0].textContent;
-            for (let i = 1; i < cells.length; i++) {
-                if (cells[i].textContent !== firstEmoji) return false;
+            // Уровень 3: Квадраты в квадрате
+            if (boardSize < 4) return false; // Минимальный размер поля для уровня 3 — 4x4
+
+            // Проверяем внешний квадрат (периметр)
+            const outerSquare = [];
+            for (let i = 0; i < boardSize; i++) {
+                outerSquare.push(i); // Верхняя строка
+                outerSquare.push((boardSize - 1) * boardSize + i); // Нижняя строка
+                if (i > 0 && i < boardSize - 1) {
+                    outerSquare.push(i * boardSize); // Левый столбец
+                    outerSquare.push(i * boardSize + (boardSize - 1)); // Правый столбец
+                }
             }
+
+            const firstOuter = cells[outerSquare[0]].textContent;
+            for (const index of outerSquare) {
+                if (cells[index].textContent !== firstOuter) return false;
+            }
+
+            // Проверяем внутренний квадрат (2x2 в центре)
+            const center = Math.floor(boardSize / 2);
+            const innerSquare = [
+                (center - 1) * boardSize + (center - 1),
+                (center - 1) * boardSize + center,
+                center * boardSize + (center - 1),
+                center * boardSize + center
+            ];
+
+            const firstInner = cells[innerSquare[0]].textContent;
+            for (const index of innerSquare) {
+                if (cells[index].textContent !== firstInner) return false;
+            }
+
             return true;
 
         case 4:
