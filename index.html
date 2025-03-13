@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6f4e37">
     <style>
-        /* Ваши стили остаются без изменений */
+        
 	body {
 	            margin: 0;
 	            font-family: Arial, sans-serif;
@@ -120,21 +120,6 @@
 
 	        audio { display: none; }
     </style>
-</head>
-<body class="theme-1">
-    <audio id="music" loop preload="none">
-        <source src="bg.mp3" type="audio/mpeg">
-    </audio>
-
-    <div class="container">
-        <h1>Уровень <span id="level">1</span></h1>
-        <div id="board" class="board"></div>
-        <div id="message" class="time-info"></div>
-        <div id="timer" class="time-info">Время: <span id="levelTime">20</span>с</div>
-        <div id="totalTime" class="time-info">Общее: <span id="totalTimeValue">0</span>с</div>
-        <div id="hint" class="time-info">Подсказка: <span id="hintText"></span></div>
-    </div>
-
     <script>
         // Проверка поддержки вибрации
         function supportsVibration() {
@@ -147,263 +132,263 @@
                 navigator.vibrate(duration);
             }
         }
-	const emojis = ["🍕", "🍔", "🍟", "🌮", "🍣", "🍩", "🍪", "🍫", "🍰", "🍦", "🍧", "🍎", "🍇"];
-	let level = 1, boardSize = 3, selectedCell = null;
-	let levelTime = 20, totalTime = 0, maxLevel = 7;
-	let timerInterval, totalTimeInterval;
-	let musicStarted = false;
 
-	const elements = {
-	    level: document.getElementById('level'),
-	    board: document.getElementById('board'),
-	    message: document.getElementById('message'),
-	    levelTime: document.getElementById('levelTime'),
-	    totalTimeValue: document.getElementById('totalTimeValue'),
-	    music: document.getElementById('music'),
-	    hintText: document.getElementById('hintText'),
-	    matrixText: document.getElementById('matrixText')
-	};
+        const emojis = ["🍕", "🍔", "🍟", "🌮", "🍣", "🍩", "🍪", "🍫", "🍰", "🍦", "🍧", "🍎", "🍇"];
+        let level = 1, boardSize = 3, selectedCell = null;
+        let levelTime = 20, totalTime = 0, maxLevel = 7;
+        let timerInterval, totalTimeInterval;
+        let musicStarted = false;
 
-	const hints = [
-	    "строка",    // Уровень 1
-	    "столбец",   // Уровень 2
-	    "периметр",  // Уровень 3
-	    "угол",      // Уровень 4
-	    "крест",     // Уровень 5
-	    "буква s",   // Уровень 6
-	    "буква c"    // Уровень 7
-	];
+        const elements = {
+            level: document.getElementById('level'),
+            board: document.getElementById('board'),
+            message: document.getElementById('message'),
+            levelTime: document.getElementById('levelTime'),
+            totalTimeValue: document.getElementById('totalTimeValue'),
+            music: document.getElementById('music'),
+            hintText: document.getElementById('hintText'),
+            matrixText: document.getElementById('matrixText')
+        };
 
-	// Шифр Цезаря для русских букв
-	function caesarCipher(word, shift) {
-	    const rusAlphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
-	    return word.toLowerCase().split('').map(char => {
-	        const index = rusAlphabet.indexOf(char);
-	        return index !== -1 ? rusAlphabet[(index + shift) % rusAlphabet.length] : char;
-	    }).join('');
-	}
+        const hints = [
+            "строка",    // Уровень 1
+            "столбец",   // Уровень 2
+            "периметр",  // Уровень 3
+            "угол",      // Уровень 4
+            "крест",     // Уровень 5
+            "буква s",   // Уровень 6
+            "буква c"    // Уровень 7
+        ];
 
-	// Анимация "матрицы" перед началом уровня
-	function showMatrixAnimation() {
-	    elements.matrixText.textContent = generateRandomSymbols(50);
-	    elements.matrixText.style.display = 'block';
-	    setTimeout(() => {
-	        elements.matrixText.style.display = 'none';
-	    }, 1000);
-	}
+        // Шифр Цезаря для русских букв
+        function caesarCipher(word, shift) {
+            const rusAlphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+            return word.toLowerCase().split('').map(char => {
+                const index = rusAlphabet.indexOf(char);
+                return index !== -1 ? rusAlphabet[(index + shift) % rusAlphabet.length] : char;
+            }).join('');
+        }
 
-	// Генерация случайных символов для анимации "матрицы"
-	function generateRandomSymbols(length) {
-	    const symbols = "!@#$%^&*()_+{}|:<>?[];',./`~";
-	    let result = '';
-	    for (let i = 0; i < length; i++) {
-	        result += symbols[Math.floor(Math.random() * symbols.length)];
-	    }
-	    return result;
-	}
+        // Анимация "матрицы" перед началом уровня
+        function showMatrixAnimation() {
+            elements.matrixText.textContent = generateRandomSymbols(50);
+            elements.matrixText.style.display = 'block';
+            setTimeout(() => {
+                elements.matrixText.style.display = 'none';
+            }, 1000);
+        }
 
-	// Подсветка уровня и подсказки
-	function highlightHint() {
-	    const levelElement = elements.level;
-	    const hintElement = elements.hintText;
+        // Генерация случайных символов для анимации "матрицы"
+        function generateRandomSymbols(length) {
+            const symbols = "!@#$%^&*()_+{}|:<>?[];',./`~";
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += symbols[Math.floor(Math.random() * symbols.length)];
+            }
+            return result;
+        }
 
-	    levelElement.style.animation = 'pulse 1s infinite';
-	    hintElement.style.animation = 'pulse 1s infinite';
+        // Подсветка уровня и подсказки
+        function highlightHint() {
+            const levelElement = elements.level;
+            const hintElement = elements.hintText;
 
-	    setTimeout(() => {
-	        levelElement.style.animation = '';
-	        hintElement.style.animation = '';
-	    }, 3000);
-	}
+            levelElement.style.animation = 'pulse 1s infinite';
+            hintElement.style.animation = 'pulse 1s infinite';
 
-	// Параллакс-эффект
-	function initParallax() {
-	    document.body.addEventListener('mousemove', (e) => {
-	        const x = (window.innerWidth / 2 - e.clientX) / 20;
-	        const y = (window.innerHeight / 2 - e.clientY) / 20;
-	        document.body.style.backgroundPosition = `${x}px ${y}px`;
-	    });
-	}
+            setTimeout(() => {
+                levelElement.style.animation = '';
+                hintElement.style.animation = '';
+            }, 3000);
+        }
 
-	function updateHint() {
-	    const encryptedHint = caesarCipher(hints[level - 1], level);
-	    elements.hintText.textContent = encryptedHint;
-	    highlightHint(); // Подсветка подсказки
-	}
+        // Параллакс-эффект
+        function initParallax() {
+            document.body.addEventListener('mousemove', (e) => {
+                const x = (window.innerWidth / 2 - e.clientX) / 20;
+                const y = (window.innerHeight / 2 - e.clientY) / 20;
+                document.body.style.backgroundPosition = `${x}px ${y}px`;
+            });
+        }
 
-	function createBoard() {
-	    elements.board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
-	    elements.board.innerHTML = '';
+        function updateHint() {
+            const encryptedHint = caesarCipher(hints[level - 1], level);
+            elements.hintText.textContent = encryptedHint;
+            highlightHint(); // Подсветка подсказки
+        }
 
-	    let emojiSet = Array(boardSize * boardSize).fill(null);
+        function createBoard() {
+            elements.board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+            elements.board.innerHTML = '';
 
-	    // Заполнение поля случайными эмодзи
-	    emojiSet = Array(boardSize).fill().flatMap(() => {
-	        const emoji = emojis[Math.random() * emojis.length | 0];
-	        return Array(boardSize).fill(emoji);
-	    }).sort(() => Math.random() - 0.5);
+            let emojiSet = Array(boardSize * boardSize).fill(null);
 
-	    // Создание ячеек
-	    for (let i = 0; i < boardSize ** 2; i++) {
-	        const cell = document.createElement('div');
-	        cell.className = 'cell';
-	        cell.textContent = emojiSet[i];
-	        cell.onclick = () => handleClick(i);
-	        elements.board.appendChild(cell);
-	    }
-	}
+            // Заполнение поля случайными эмодзи
+            emojiSet = Array(boardSize).fill().flatMap(() => {
+                const emoji = emojis[Math.random() * emojis.length | 0];
+                return Array(boardSize).fill(emoji);
+            }).sort(() => Math.random() - 0.5);
 
-	function handleClick(index) {
-	    if (!timerInterval) return;
+            // Создание ячеек
+            for (let i = 0; i < boardSize ** 2; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = emojiSet[i];
+                cell.onclick = () => handleClick(i);
+                elements.board.appendChild(cell);
+            }
+        }
 
-	    vibrate(50); // Виброотклик при нажатии
+        function handleClick(index) {
+            if (!timerInterval) return;
 
-	    const cells = elements.board.children;
-	    const row = Math.floor(index / boardSize);
-	    const col = index % boardSize;
+            vibrate(50); // Виброотклик при нажатии
 
-	    if (!selectedCell) {
-	        selectedCell = { row, col, index };
-	        cells[index].classList.add('selected');
-	        return;
-	    }
+            const cells = elements.board.children;
+            const row = Math.floor(index / boardSize);
+            const col = index % boardSize;
 
-	    const first = cells[selectedCell.index];
-	    const second = cells[index];
+            if (!selectedCell) {
+                selectedCell = { row, col, index };
+                cells[index].classList.add('selected');
+                return;
+            }
 
-	    [first.textContent, second.textContent] = [second.textContent, first.textContent];
+            const first = cells[selectedCell.index];
+            const second = cells[index];
 
-	    first.classList.remove('selected');
-	    selectedCell = null;
+            [first.textContent, second.textContent] = [second.textContent, first.textContent];
 
-	    if (checkWin()) handleWin();
-	}
+            first.classList.remove('selected');
+            selectedCell = null;
 
-	function checkWin() {
-	    const cells = elements.board.children;
+            if (checkWin()) handleWin();
+        }
 
-	    switch (level) {
-	        case 1:
-	            // Проверка строк
-	            for (let i = 0; i < boardSize; i++) {
-	                const rowStart = i * boardSize;
-	                if (!cells[rowStart].textContent) return false;
-	                const first = cells[rowStart].textContent;
-	                for (let j = 1; j < boardSize; j++) {
-	                    if (cells[rowStart + j].textContent !== first) return false;
-	                }
-	            }
-	            return true;
+        function checkWin() {
+            const cells = elements.board.children;
 
-	        case 2:
-	            // Проверка столбцов
-	            for (let j = 0; j < boardSize; j++) {
-	                if (!cells[j].textContent) return false;
-	                const first = cells[j].textContent;
-	                for (let i = 1; i < boardSize; i++) {
-	                    if (cells[i * boardSize + j].textContent !== first) return false;
-	                }
-	            }
-	            return true;
+            switch (level) {
+                case 1:
+                    // Проверка строк
+                    for (let i = 0; i < boardSize; i++) {
+                        const rowStart = i * boardSize;
+                        if (!cells[rowStart].textContent) return false;
+                        const first = cells[rowStart].textContent;
+                        for (let j = 1; j < boardSize; j++) {
+                            if (cells[rowStart + j].textContent !== first) return false;
+                        }
+                    }
+                    return true;
 
-	        case 3:
-	            // Проверка периметра
-	            const perimeter = [];
-	            for (let i = 0; i < boardSize; i++) {
-	                perimeter.push(cells[i].textContent); // Верхняя строка
-	                perimeter.push(cells[(boardSize - 1) * boardSize + i].textContent); // Нижняя строка
-	            }
-	            for (let i = 1; i < boardSize - 1; i++) {
-	                perimeter.push(cells[i * boardSize].textContent); // Левый столбец
-	                perimeter.push(cells[i * boardSize + (boardSize - 1)].textContent); // Правый столбец
-	            }
-	            return new Set(perimeter).size === 1;
+                case 2:
+                    // Проверка столбцов
+                    for (let j = 0; j < boardSize; j++) {
+                        if (!cells[j].textContent) return false;
+                        const first = cells[j].textContent;
+                        for (let i = 1; i < boardSize; i++) {
+                            if (cells[i * boardSize + j].textContent !== first) return false;
+                        }
+                    }
+                    return true;
 
-	        default:
-	            return false;
-	    }
-	}
+                case 3:
+                    // Проверка периметра
+                    const perimeter = [];
+                    for (let i = 0; i < boardSize; i++) {
+                        perimeter.push(cells[i].textContent); // Верхняя строка
+                        perimeter.push(cells[(boardSize - 1) * boardSize + i].textContent); // Нижняя строка
+                    }
+                    for (let i = 1; i < boardSize - 1; i++) {
+                        perimeter.push(cells[i * boardSize].textContent); // Левый столбец
+                        perimeter.push(cells[i * boardSize + (boardSize - 1)].textContent); // Правый столбец
+                    }
+                    return new Set(perimeter).size === 1;
 
-	function handleWin() {
-	    clearInterval(timerInterval);
-	    vibrate([100, 50, 100]); // Виброотклик при победе
+                default:
+                    return false;
+            }
+        }
 
-	    if (level === maxLevel) {
-	        elements.message.textContent = `Победа! Время: ${totalTime}с`;
-	        clearInterval(totalTimeInterval);
-	        return;
-	    }
+        function handleWin() {
+            clearInterval(timerInterval);
+            vibrate([100, 50, 100]); // Виброотклик при победе
 
-	    elements.message.textContent = "Вы на шаг ближе к school_21";
-	    setTimeout(() => {
-	        level++;
-	        boardSize++;
-	        levelTime += 10;
-	        elements.level.textContent = level;
-	        document.body.className = `theme-${level}`;
-	        elements.message.textContent = "";
-	        startGame();
-	    }, 2000);
-	}
+            if (level === maxLevel) {
+                elements.message.textContent = `Победа! Время: ${totalTime}с`;
+                clearInterval(totalTimeInterval);
+                return;
+            }
 
-	function startTimer() {
-	    let time = levelTime;
-	    elements.levelTime.textContent = time;
+            elements.message.textContent = "Вы на шаг ближе к school_21";
+            setTimeout(() => {
+                level++;
+                boardSize++;
+                levelTime += 10;
+                elements.level.textContent = level;
+                document.body.className = `theme-${level}`;
+                elements.message.textContent = "";
+                startGame();
+            }, 2000);
+        }
 
-	    timerInterval = setInterval(() => {
-	        if (--time <= 0) {
-	            clearInterval(timerInterval);
-	            vibrate([200, 100, 200]); // Виброотклик при проигрыше
+        function startTimer() {
+            let time = levelTime;
+            elements.levelTime.textContent = time;
 
-	            if (level === 1) {
-	                elements.message.textContent = 'Тапните для перезапуска';
-	                document.addEventListener('click', restartGame, { once: true });
-	                return;
-	            }
-	            level--;
-	            boardSize--;
-	            levelTime -= 10;
-	            elements.level.textContent = level;
-	            document.body.className = `theme-${level}`;
-	            startGame();
-	        }
-	        elements.levelTime.textContent = time;
-	    }, 1000);
-	}
+            timerInterval = setInterval(() => {
+                if (--time <= 0) {
+                    clearInterval(timerInterval);
+                    vibrate([200, 100, 200]); // Виброотклик при проигрыше
 
-	function startGame() {
-	    clearInterval(timerInterval);
-	    clearInterval(totalTimeInterval);
-	    showMatrixAnimation(); // Анимация "матрицы"
-	    updateHint();
-	    createBoard();
-	    startTimer();
-	    totalTimeInterval = setInterval(() => {
-	        totalTime++;
-	        elements.totalTimeValue.textContent = totalTime;
-	    }, 1000);
+                    if (level === 1) {
+                        elements.message.textContent = 'Тапните для перезапуска';
+                        document.addEventListener('click', restartGame, { once: true });
+                        return;
+                    }
+                    level--;
+                    boardSize--;
+                    levelTime -= 10;
+                    elements.level.textContent = level;
+                    document.body.className = `theme-${level}`;
+                    startGame();
+                }
+                elements.levelTime.textContent = time;
+            }, 1000);
+        }
 
-	    if (!musicStarted) {
-	        elements.music.play();
-	        musicStarted = true;
-	    }
-	}
+        function startGame() {
+            clearInterval(timerInterval);
+            clearInterval(totalTimeInterval);
+            showMatrixAnimation(); // Анимация "матрицы"
+            updateHint();
+            createBoard();
+            startTimer();
+            totalTimeInterval = setInterval(() => {
+                totalTime++;
+                elements.totalTimeValue.textContent = totalTime;
+            }, 1000);
 
-	function restartGame() {
-	    level = 1;
-	    boardSize = 3;
-	    levelTime = 20;
-	    totalTime = 0;
-	    elements.level.textContent = level;
-	    document.body.className = 'theme-1';
-	    elements.message.textContent = '';
-	    startGame();
-	}
+            if (!musicStarted) {
+                elements.music.play();
+                musicStarted = true;
+            }
+        }
 
-	// Инициализация игры
-	initParallax();
-	startGame();
-        
+        function restartGame() {
+            level = 1;
+            boardSize = 3;
+            levelTime = 20;
+            totalTime = 0;
+            elements.level.textContent = level;
+            document.body.className = 'theme-1';
+            elements.message.textContent = '';
+            startGame();
+        }
+
+        // Инициализация игры
+        initParallax();
+        startGame();
     </script>
 
     <script>
