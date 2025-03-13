@@ -170,31 +170,35 @@
 	        const types = [
 	            ...Array(16).fill(emojis[0]),  // Внешний периметр
 	            ...Array(8).fill(emojis[1]),   // Внутренний периметр
-	            emojis[2]                      // Центр
-	        ].sort(() => Math.random() - 0.5);
+	            emojis[2]                     // Центр
+	        ];
 	        
 	        let typeIndex = 0;
 	        
-	        // Заполнение уровней
-	        for (let layer = 0; layer < 3; layer++) {
-	            const start = layer;
-	            const end = boardSize - 1 - layer;
-	            
-	            // Верхняя и нижняя строки
-	            for (let i = start; i <= end; i++) {
-	                emojiSet[start * boardSize + i] = types[typeIndex++];
-	                emojiSet[end * boardSize + i] = types[typeIndex++];
-	            }
-	            
-	            // Левый и правый столбцы (без углов)
-	            for (let i = start + 1; i < end; i++) {
-	                emojiSet[i * boardSize + start] = types[typeIndex++];
-	                emojiSet[i * boardSize + end] = types[typeIndex++];
-	            }
+	        // Заполнение внешнего периметра
+	        for (let i = 0; i < boardSize; i++) {
+	            emojiSet[i] = types[typeIndex]; // Верхняя строка
+	            emojiSet[6 * boardSize + i] = types[typeIndex]; // Нижняя строка
 	        }
+	        for (let i = 1; i < boardSize - 1; i++) {
+	            emojiSet[i * boardSize] = types[typeIndex]; // Левый столбец
+	            emojiSet[i * boardSize + 6] = types[typeIndex]; // Правый столбец
+	        }
+	        typeIndex++;
 	        
-	        // Центральная клетка
-	        emojiSet[24] = types[types.length - 1];
+	        // Заполнение внутреннего периметра
+	        for (let i = 1; i < boardSize - 1; i++) {
+	            emojiSet[1 * boardSize + i] = types[typeIndex]; // Вторая строка
+	            emojiSet[5 * boardSize + i] = types[typeIndex]; // Предпоследняя строка
+	        }
+	        for (let i = 2; i < boardSize - 2; i++) {
+	            emojiSet[i * boardSize + 1] = types[typeIndex]; // Второй столбец
+	            emojiSet[i * boardSize + 5] = types[typeIndex]; // Предпоследний столбец
+	        }
+	        typeIndex++;
+	        
+	        // Заполнение центра
+	        emojiSet[3 * boardSize + 3] = types[typeIndex]; // Центральная клетка
 	    } else {
 	        // Стандартная генерация для других уровней
 	        emojiSet = Array(boardSize).fill().flatMap(() => {
@@ -212,7 +216,7 @@
 	        elements.board.appendChild(cell);
 	    }
 	}
-
+	
 	function handleClick(index) {
 	    if (!timerInterval) return;
 	    
