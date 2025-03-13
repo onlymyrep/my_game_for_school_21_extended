@@ -336,7 +336,7 @@
 	            levelTime -= 10;
 	            elements.level.textContent = level;
 	            document.body.className = `theme-${level}`;
-	                        startGame();
+	            startGame();
 	        }
 	        elements.levelTime.textContent = time;
 	    }, 1000);
@@ -345,17 +345,23 @@
 	function startGame() {
 	    clearInterval(timerInterval);
 	    clearInterval(totalTimeInterval);
-	    updateHint();
 	    createBoard();
 	    startTimer();
+	    updateHint();
 	    totalTimeInterval = setInterval(() => {
 	        totalTime++;
 	        elements.totalTimeValue.textContent = totalTime;
 	    }, 1000);
 	    
 	    if (!musicStarted) {
-	        elements.music.play();
-	        musicStarted = true;
+	        elements.music.play()
+	            .then(() => musicStarted = true)
+	            .catch(() => {
+	                document.addEventListener('click', () => {
+	                    elements.music.play();
+	                    musicStarted = true;
+	                }, { once: true });
+	            });
 	    }
 	}
 
@@ -365,17 +371,20 @@
 	    levelTime = 20;
 	    totalTime = 0;
 	    elements.level.textContent = level;
-	    document.body.className = 'theme-1';
-	    elements.message.textContent = '';
+	    elements.totalTimeValue.textContent = totalTime;
+	    document.body.className = `theme-${level}`;
 	    startGame();
 	}
 
-	// Инициализация игры
-	initParallax();
-	startGame();
-
-
-
+	// Инициализация
+	document.addEventListener('DOMContentLoaded', () => {
+	    startGame();
+	    initParallax();
+	});
+	document.addEventListener('touchstart', (e) => {
+	    if (e.touches.length > 1) e.preventDefault();
+	}, { passive: true });
+	document.addEventListener('gesturestart', (e) => e.preventDefault());
     </script>
 </body>
 </html>
