@@ -95,274 +95,287 @@
     </div>
 
     <script>
-        const emojis = ["😊", "😎", "🤩", "🥳", "😍", "🤗", "😇", "😜", "🤪", "😏", "😌", "😴", "🤠"];
-        let level = 1, boardSize = 3, selectedCell = null;
-        let levelTime = 20, totalTime = 0, maxLevel = 7;
-        let timerInterval, totalTimeInterval;
-        let musicStarted = false;
+	const emojis = ["😊", "😎", "🤩", "🥳", "😍", "🤗", "😇", "😜", "🤪", "😏", "😌", "😴", "🤠"];
+	let level = 1, boardSize = 3, selectedCell = null;
+	let levelTime = 20, totalTime = 0, maxLevel = 7;
+	let timerInterval, totalTimeInterval;
+	let musicStarted = false;
 
-        const elements = {
-            level: document.getElementById('level'),
-            board: document.getElementById('board'),
-            message: document.getElementById('message'),
-            levelTime: document.getElementById('levelTime'),
-            totalTimeValue: document.getElementById('totalTimeValue'),
-            music: document.getElementById('music'),
-            hintText: document.getElementById('hintText')
-        };
+	const elements = {
+	    level: document.getElementById('level'),
+	    board: document.getElementById('board'),
+	    message: document.getElementById('message'),
+	    levelTime: document.getElementById('levelTime'),
+	    totalTimeValue: document.getElementById('totalTimeValue'),
+	    music: document.getElementById('music'),
+	    hintText: document.getElementById('hintText')
+	};
 
-        const hints = [
-            "строка",    // Уровень 1
-            "столбец",   // Уровень 2
-            "периметр",  // Уровень 3
-            "угол",      // Уровень 4
-            "крест",     // Уровень 5
-            "буква s",   // Уровень 6
-            "буква c"    // Уровень 7
-        ];
+	const hints = [
+	    "строка",    // Уровень 1
+	    "столбец",   // Уровень 2
+	    "периметр",  // Уровень 3
+	    "угол",      // Уровень 4
+	    "крест",     // Уровень 5
+	    "буква s",   // Уровень 6
+	    "буква c"    // Уровень 7
+	];
 
-        function caesarCipher(word, shift) {
-            const rusAlphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
-            return word
-                .toLowerCase()
-                .split('')
-                .map(char => {
-                    const index = rusAlphabet.indexOf(char);
-                    if (index !== -1) {
-                        const newIndex = (index + shift) % rusAlphabet.length;
-                        return rusAlphabet[newIndex];
-                    } else {
-                        return char; // Оставляем пробелы и другие символы без изменений
-                    }
-                })
-                .join('');
-        }
+	// Шифр Цезаря для русских букв
+	function caesarCipher(word, shift) {
+	    const rusAlphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+	    return word.toLowerCase().split('').map(char => {
+	        const index = rusAlphabet.indexOf(char);
+	        return index !== -1 ? rusAlphabet[(index + shift) % rusAlphabet.length] : char;
+	    }).join('');
+	}
 
-        function updateHint() {
-            const encryptedHint = caesarCipher(hints[level - 1], level);
-            elements.hintText.textContent = encryptedHint;
-        }
+	// Подсветка уровня и подсказки
+	function highlightHint() {
+	    const levelElement = elements.level;
+	    const hintElement = elements.hintText;
 
-        function createBoard() {
-            elements.board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
-            elements.board.innerHTML = '';
-            
-            const emojiSet = Array(boardSize).fill()
-                .flatMap(() => {
-                    const emoji = emojis[Math.random() * emojis.length | 0];
-                    return Array(boardSize).fill(emoji);
-                })
-                .sort(() => Math.random() - 0.5);
+	    levelElement.style.animation = 'pulse 1s infinite';
+	    hintElement.style.animation = 'pulse 1s infinite';
 
-            for (let i = 0; i < boardSize ** 2; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.textContent = emojiSet[i];
-                cell.onclick = () => handleClick(i);
-                elements.board.appendChild(cell);
-            }
-        }
+	    setTimeout(() => {
+	        levelElement.style.animation = '';
+	        hintElement.style.animation = '';
+	    }, 3000);
+	}
 
-        function handleClick(index) {
-            if (!timerInterval) return;
-            
-            const cells = elements.board.children;
-            const row = Math.floor(index / boardSize);
-            const col = index % boardSize;
-            
-            if (!selectedCell) {
-                selectedCell = { row, col, index };
-                cells[index].classList.add('selected');
-                return;
-            }
+	// Параллакс-эффект
+	function initParallax() {
+	    document.body.addEventListener('mousemove', (e) => {
+	        const x = (window.innerWidth / 2 - e.clientX) / 20;
+	        const y = (window.innerHeight / 2 - e.clientY) / 20;
+	        document.body.style.backgroundPosition = `${x}px ${y}px`;
+	    });
+	}
 
-            const first = cells[selectedCell.index];
-            const second = cells[index];
-            
-            [first.textContent, second.textContent] = [second.textContent, first.textContent];
-            
-            first.classList.remove('selected');
-            selectedCell = null;
-            
-            if (checkWin()) handleWin();
-        }
+	function updateHint() {
+	    const encryptedHint = caesarCipher(hints[level - 1], level);
+	    elements.hintText.textContent = encryptedHint;
+	    highlightHint(); // Подсветка подсказки
+	}
 
-        function checkWin() {
-            const cells = elements.board.children;
+	function createBoard() {
+	    elements.board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+	    elements.board.innerHTML = '';
+	    
+	    let emojiSet = Array(boardSize * boardSize).fill(null);
 
-            switch (level) {
-                case 1:
-                    // Уровень 1: Все эмодзи в строке должны быть одинаковыми
-                    for (let i = 0; i < boardSize; i++) {
-                        const rowStart = i * boardSize;
-                        const first = cells[rowStart].textContent;
-                        for (let j = 1; j < boardSize; j++) {
-                            if (cells[rowStart + j].textContent !== first) return false;
-                        }
-                    }
-                    return true;
+	    if (level === 3 && boardSize === 7) {
+	        // Генерация для уровня 3 (7x7)
+	        const types = [
+	            ...Array(16).fill(emojis[0]),  // Внешний периметр
+	            ...Array(8).fill(emojis[1]),   // Внутренний периметр
+	            emojis[2]                      // Центр
+	        ].sort(() => Math.random() - 0.5);
+	        
+	        let typeIndex = 0;
+	        
+	        // Заполнение уровней
+	        for (let layer = 0; layer < 3; layer++) {
+	            const start = layer;
+	            const end = boardSize - 1 - layer;
+	            
+	            // Верхняя и нижняя строки
+	            for (let i = start; i <= end; i++) {
+	                emojiSet[start * boardSize + i] = types[typeIndex++];
+	                emojiSet[end * boardSize + i] = types[typeIndex++];
+	            }
+	            
+	            // Левый и правый столбцы (без углов)
+	            for (let i = start + 1; i < end; i++) {
+	                emojiSet[i * boardSize + start] = types[typeIndex++];
+	                emojiSet[i * boardSize + end] = types[typeIndex++];
+	            }
+	        }
+	        
+	        // Центральная клетка
+	        emojiSet[24] = types[types.length - 1];
+	    } else {
+	        // Стандартная генерация для других уровней
+	        emojiSet = Array(boardSize).fill().flatMap(() => {
+	            const emoji = emojis[Math.random() * emojis.length | 0];
+	            return Array(boardSize).fill(emoji);
+	        }).sort(() => Math.random() - 0.5);
+	    }
 
-                case 2:
-                    // Уровень 2: Все эмодзи в столбце должны быть одинаковыми
-                    for (let j = 0; j < boardSize; j++) {
-                        const first = cells[j].textContent;
-                        for (let i = 1; i < boardSize; i++) {
-                            if (cells[i * boardSize + j].textContent !== first) return false;
-                        }
-                    }
-                    return true;
+	    // Создание ячеек
+	    for (let i = 0; i < boardSize ** 2; i++) {
+	        const cell = document.createElement('div');
+	        cell.className = 'cell';
+	        cell.textContent = emojiSet[i];
+	        cell.onclick = () => handleClick(i);
+	        elements.board.appendChild(cell);
+	    }
+	}
 
-                case 3:
-                    // Уровень 3: Периметры из одинаковых эмодзи
-                    if (boardSize < 3) return false;
+	function handleClick(index) {
+	    if (!timerInterval) return;
+	    
+	    const cells = elements.board.children;
+	    const row = Math.floor(index / boardSize);
+	    const col = index % boardSize;
+	    
+	    if (!selectedCell) {
+	        selectedCell = { row, col, index };
+	        cells[index].classList.add('selected');
+	        return;
+	    }
 
-                    // Внешний периметр
-                    const outerPerimeter = [];
-                    for (let i = 0; i < boardSize; i++) {
-                        outerPerimeter.push(i); // Верхняя строка
-                        outerPerimeter.push((boardSize - 1) * boardSize + i); // Нижняя строка
-                        if (i > 0 && i < boardSize - 1) {
-                            outerPerimeter.push(i * boardSize); // Левый столбец
-                            outerPerimeter.push(i * boardSize + (boardSize - 1)); // Правый столбец
-                        }
-                    }
+	    const first = cells[selectedCell.index];
+	    const second = cells[index];
+	    
+	    [first.textContent, second.textContent] = [second.textContent, first.textContent];
+	    
+	    first.classList.remove('selected');
+	    selectedCell = null;
+	    
+	    if (checkWin()) handleWin();
+	}
 
-                    const firstOuter = cells[outerPerimeter[0]].textContent;
-                    for (const index of outerPerimeter) {
-                        if (cells[index].textContent !== firstOuter) return false;
-                    }
+	function checkWin() {
+	    const cells = elements.board.children;
+	    
+	    switch (level) {
+	        case 1:
+	            // Проверка строк
+	            for (let i = 0; i < boardSize; i++) {
+	                const rowStart = i * boardSize;
+	                if (!cells[rowStart].textContent) return false;
+	                const first = cells[rowStart].textContent;
+	                for (let j = 1; j < boardSize; j++) {
+	                    if (cells[rowStart + j].textContent !== first) return false;
+	                }
+	            }
+	            return true;
 
-                    // Внутренний периметр (если размер поля >= 5)
-                    if (boardSize >= 5) {
-                        const innerPerimeter = [];
-                        for (let i = 1; i < boardSize - 1; i++) {
-                            innerPerimeter.push(i + boardSize); // Верхняя строка
-                            innerPerimeter.push(i + (boardSize - 2) * boardSize); // Нижняя строка
-                            if (i > 1 && i < boardSize - 2) {
-                                innerPerimeter.push(i * boardSize + 1); // Левый столбец
-                                innerPerimeter.push(i * boardSize + (boardSize - 2)); // Правый столбец
-                            }
-                        }
+	        case 2:
+	            // Проверка столбцов
+	            for (let j = 0; j < boardSize; j++) {
+	                if (!cells[j].textContent) return false;
+	                const first = cells[j].textContent;
+	                for (let i = 1; i < boardSize; i++) {
+	                    if (cells[i * boardSize + j].textContent !== first) return false;
+	                }
+	            }
+	            return true;
 
-                        const firstInner = cells[innerPerimeter[0]].textContent;
-                        for (const index of innerPerimeter) {
-                            if (cells[index].textContent !== firstInner) return false;
-                        }
-                    }
+	        case 3:
+	            // Проверка вложенных периметров
+	            const expectedCounts = [16, 8, 1];
+	            const layers = [];
+	            
+	            // Собираем данные по слоям
+	            for (let layer = 0; layer < 3; layer++) {
+	                const layerCells = [];
+	                const start = layer;
+	                const end = boardSize - 1 - layer;
+	                
+	                for (let i = start; i <= end; i++) {
+	                    layerCells.push(cells[start * boardSize + i].textContent);
+	                    layerCells.push(cells[end * boardSize + i].textContent);
+	                }
+	                
+	                for (let i = start + 1; i < end; i++) {
+	                    layerCells.push(cells[i * boardSize + start].textContent);
+	                    layerCells.push(cells[i * boardSize + end].textContent);
+	                }
+	                
+	                layers.push(layerCells);
+	            }
+	            
+	            // Проверяем каждый слой
+	            return layers.every((layer, index) => {
+	                const unique = new Set(layer);
+	                return unique.size === 1 && layer.length === expectedCounts[index];
+	            });
 
-                    return true;
+	        default:
+	            return false;
+	    }
+	}
 
-                case 4:
-                    // Уровень 4: Углы из одинаковых эмодзи
-                    const firstCorner = cells[0].textContent;
-                    const secondCorner = cells[boardSize - 1].textContent;
-                    const thirdCorner = cells[(boardSize - 1) * boardSize].textContent;
-                    const fourthCorner = cells[boardSize * boardSize - 1].textContent;
+	function handleWin() {
+	    clearInterval(timerInterval);
+	    if (level === maxLevel) {
+	        elements.message.textContent = `Победа! Время: ${totalTime}с`;
+	        clearInterval(totalTimeInterval);
+	        return;
+	    }
 
-                    if (
-                        cells[0].textContent !== firstCorner ||
-                        cells[boardSize - 1].textContent !== secondCorner ||
-                        cells[(boardSize - 1) * boardSize].textContent !== thirdCorner ||
-                        cells[boardSize * boardSize - 1].textContent !== fourthCorner
-                    ) {
-                        return false;
-                    }
+	    elements.message.textContent = "Вы на шаг ближе к school_21";
+	    setTimeout(() => {
+	        level++;
+	        boardSize = level === 3 ? 7 : boardSize + 1;
+	        levelTime += 10;
+	        elements.level.textContent = level;
+	        document.body.className = `theme-${level}`;
+	        elements.message.textContent = "";
+	        startGame();
+	    }, 2000);
+	}
 
-                    return true;
+	function startTimer() {
+	    let time = levelTime;
+	    elements.levelTime.textContent = time;
+	    
+	    timerInterval = setInterval(() => {
+	        if (--time <= 0) {
+	            clearInterval(timerInterval);
+	            if (level === 1) {
+	                elements.message.textContent = 'Тапните для перезапуска';
+	                document.addEventListener('click', restartGame, { once: true });
+	                return;
+	            }
+	            level--;
+	            boardSize = level === 3 ? 7 : boardSize - 1;
+	            levelTime -= 10;
+	            elements.level.textContent = level;
+	            document.body.className = `theme-${level}`;
+	                        startGame();
+	        }
+	        elements.levelTime.textContent = time;
+	    }, 1000);
+	}
 
-                default:
-                    return false;
-            }
-        }
+	function startGame() {
+	    clearInterval(timerInterval);
+	    clearInterval(totalTimeInterval);
+	    updateHint();
+	    createBoard();
+	    startTimer();
+	    totalTimeInterval = setInterval(() => {
+	        totalTime++;
+	        elements.totalTimeValue.textContent = totalTime;
+	    }, 1000);
+	    
+	    if (!musicStarted) {
+	        elements.music.play();
+	        musicStarted = true;
+	    }
+	}
 
-        function handleWin() {
-            clearInterval(timerInterval);
-            if (level === maxLevel) {
-                elements.message.textContent = `Победа! Время: ${totalTime}с`;
-                clearInterval(totalTimeInterval);
-                return;
-            }
+	function restartGame() {
+	    level = 1;
+	    boardSize = 3;
+	    levelTime = 20;
+	    totalTime = 0;
+	    elements.level.textContent = level;
+	    document.body.className = 'theme-1';
+	    elements.message.textContent = '';
+	    startGame();
+	}
 
-            // Выводим сообщение о шаге к school_21
-            elements.message.textContent = "Вы на шаг ближе к school_21";
+	// Инициализация игры
+	initParallax();
+	startGame();
 
-            // Задержка перед переходом на следующий уровень
-            setTimeout(() => {
-                level++;
-                boardSize++;
-                levelTime += 10;
-                elements.level.textContent = level;
-                document.body.className = `theme-${level}`;
-                elements.message.textContent = ""; // Очищаем сообщение
-                startGame();
-            }, 2000); // Задержка 2 секунды
-        }
 
-        function startTimer() {
-            let time = levelTime;
-            elements.levelTime.textContent = time;
 
-            timerInterval = setInterval(() => {
-                if (--time <= 0) {
-                    clearInterval(timerInterval);
-                    if (level === 1) {
-                        elements.message.textContent = 'Тапните для перезапуска';
-                        document.addEventListener('click', restartGame, { once: true });
-                        return;
-                    }
-                    level--;
-                    boardSize--;
-                    levelTime -= 10;
-                    elements.level.textContent = level;
-                    document.body.className = `theme-${level}`;
-                    startGame();
-                }
-                elements.levelTime.textContent = time;
-            }, 1000);
-        }
-
-        function startGame() {
-            clearInterval(timerInterval);
-            clearInterval(totalTimeInterval);
-            createBoard();
-            startTimer();
-            updateHint(); // Обновляем подсказку
-            totalTimeInterval = setInterval(() => {
-                totalTime++;
-                elements.totalTimeValue.textContent = totalTime;
-            }, 1000);
-            if (!musicStarted) {
-                elements.music.play().then(() => {
-                    musicStarted = true;
-                }).catch(() => {
-                    document.addEventListener('click', () => {
-                        elements.music.play();
-                        musicStarted = true;
-                    }, { once: true });
-                });
-            }
-        }
-
-        function restartGame() {
-            level = 1;
-            boardSize = 3;
-            levelTime = 20;
-            totalTime = 0;
-            elements.level.textContent = level;
-            elements.totalTimeValue.textContent = totalTime;
-            document.body.className = `theme-${level}`;
-            startGame();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            startGame();
-        });
-
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) e.preventDefault();
-        }, { passive: true });
-
-        document.addEventListener('gesturestart', (e) => e.preventDefault());
     </script>
 </body>
 </html>
