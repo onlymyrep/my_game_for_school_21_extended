@@ -7,119 +7,142 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6f4e37">
     <style>
-        
-	body {
-	            margin: 0;
-	            font-family: Arial, sans-serif;
-	            display: flex;
-	            justify-content: center;
-	            align-items: center;
-	            min-height: 100vh;
-	            background: #f0f0f0;
-	            transition: background 0.3s;
-	            touch-action: manipulation;
-	            -webkit-tap-highlight-color: transparent;
-	        }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+            transition: background 0.3s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            tap-highlight-color: transparent;
+        }
 
-	        .container {
-	            padding: 10px;
-	            max-width: 100vw;
-	            box-sizing: border-box;
-	        }
+        .container {
+            padding: 10px;
+            max-width: 100vw;
+            box-sizing: border-box;
+        }
 
-	        h1 {
-	            font-size: 1.5rem;
-	            margin: 0 0 1rem;
-	            text-align: center;
-	        }
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 1rem;
+            text-align: center;
+        }
 
-	        .board {
-	            display: grid;
-	            gap: 2px;
-	            margin: 0 auto;
-	            max-width: 100vw;
-	            overflow: auto;
-	            touch-action: manipulation;
-	        }
+        .board {
+            display: grid;
+            gap: 2px;
+            margin: 0 auto;
+            max-width: 100vw;
+            overflow: auto;
+            touch-action: manipulation;
+        }
 
-	        .cell {
-	            aspect-ratio: 1;
-	            min-width: 45px;
-	            display: flex;
-	            justify-content: center;
-	            align-items: center;
-	            font-size: calc(12px + 1.5vmin);
-	            background: #e0e0e0;
-	            border-radius: 4px;
-	            cursor: pointer;
-	            user-select: none;
-	            transition: background 0.15s;
-	        }
+        .cell {
+            width: 100%;
+            padding-top: 100%; /* Квадратные ячейки */
+            position: relative;
+            background: #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
 
-	        .cell.selected {
-	            background: #a0a0a0 !important;
-	        }
+        .cell > span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: calc(12px + 1.5vmin);
+        }
 
-	        #message {
-	            text-align: center;
-	            margin: 1rem 0;
-	            min-height: 1.5em;
-	        }
+        .cell.selected {
+            background: #a0a0a0;
+        }
 
-	        .time-info {
-	            text-align: center;
-	            margin: 0.5rem 0;
-	            font-size: 0.9em;
-	        }
+        #message {
+            text-align: center;
+            margin: 1rem 0;
+            min-height: 1.5em;
+        }
 
-	        body.theme-1 {
-	            background-color: #6f4e37; /* Кофейный */
-	            color: #f5f5f5;
-	        }
+        .time-info {
+            text-align: center;
+            margin: 0.5rem 0;
+            font-size: 0.9em;
+        }
 
-	        body.theme-2 {
-	            background-color: #5d4037; /* Темно-коричневый */
-	            color: #f5f5f5;
-	        }
-		body.theme-3 {
-	            background-color: #4e342e; /* Шоколадный */
-	            color: #f5f5f5;
-	        }
+        body.theme-1 {
+            background-color: #6f4e37; /* Кофейный */
+            color: #f5f5f5;
+        }
 
-	        body.theme-4 {
-	            background-color: #3e2723; /* Глубокий коричневый */
-	            color: #f5f5f5;
-	        }
+        body.theme-2 {
+            background-color: #5d4037; /* Темно-коричневый */
+            color: #f5f5f5;
+        }
 
-	        body.theme-5 {
-	            background-color: #8d6e63; /* Светло-коричневый */
-	            color: #f5f5f5;
-	        }
+        body.theme-3 {
+            background-color: #4e342e; /* Шоколадный */
+            color: #f5f5f5;
+        }
 
-	        body.theme-6 {
-	            background-color: #a1887f; /* Бежево-коричневый */
-	            color: #f5f5f5;
-	        }
+        body.theme-4 {
+            background-color: #3e2723; /* Глубокий коричневый */
+            color: #f5f5f5;
+        }
 
-	        body.theme-7 {
-	            background-color: #bcaaa4; /* Светлый бежевый */
-	            color: #333;
-	        }
+        body.theme-5 {
+            background-color: #8d6e63; /* Светло-коричневый */
+            color: #f5f5f5;
+        }
 
-	        #matrixText {
-	            position: fixed;
-	            top: 50%;
-	            left: 50%;
-	            transform: translate(-50%, -50%);
-	            font-size: 24px;
-	            font-family: monospace;
-	            color: #00ff00;
-	            display: none;
-	            z-index: 1000;
-	        }
+        body.theme-6 {
+            background-color: #a1887f; /* Бежево-коричневый */
+            color: #f5f5f5;
+        }
 
-	        audio { display: none; }
+        body.theme-7 {
+            background-color: #bcaaa4; /* Светлый бежевый */
+            color: #333;
+        }
+
+        #matrixText {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-family: monospace;
+            color: #00ff00;
+            display: none;
+            z-index: 1000;
+        }
+
+        audio {
+            display: none;
+        }
     </style>
+</head>
+<body class="theme-1">
+    <audio id="music" loop preload="none">
+        <source src="bg.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="container">
+        <h1>Уровень <span id="level">1</span></h1>
+        <div id="board" class="board"></div>
+        <div id="message" class="time-info"></div>
+        <div id="timer" class="time-info">Время: <span id="levelTime">20</span>с</div>
+        <div id="totalTime" class="time-info">Общее: <span id="totalTimeValue">0</span>с</div>
+        <div id="hint" class="time-info">Подсказка: <span id="hintText"></span></div>
+    </div>
+
     <script>
         // Проверка поддержки вибрации
         function supportsVibration() {
@@ -221,19 +244,18 @@
             elements.board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
             elements.board.innerHTML = '';
 
-            let emojiSet = Array(boardSize * boardSize).fill(null);
-
-            // Заполнение поля случайными эмодзи
-            emojiSet = Array(boardSize).fill().flatMap(() => {
-                const emoji = emojis[Math.random() * emojis.length | 0];
+            let emojiSet = Array(boardSize).fill().map(() => {
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
                 return Array(boardSize).fill(emoji);
-            }).sort(() => Math.random() - 0.5);
+            }).flat();
 
             // Создание ячеек
             for (let i = 0; i < boardSize ** 2; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                cell.textContent = emojiSet[i];
+                const span = document.createElement('span');
+                span.textContent = emojiSet[i];
+                cell.appendChild(span);
                 cell.onclick = () => handleClick(i);
                 elements.board.appendChild(cell);
             }
@@ -326,7 +348,8 @@
                 boardSize++;
                 levelTime += 10;
                 elements.level.textContent = level;
-                document.body.className = `theme-${level}`;
+                document.body.classList.remove(`theme-${level - 1}`);
+                document.body.classList.add(`theme-${level}`);
                 elements.message.textContent = "";
                 startGame();
             }, 2000);
@@ -350,7 +373,8 @@
                     boardSize--;
                     levelTime -= 10;
                     elements.level.textContent = level;
-                    document.body.className = `theme-${level}`;
+                    document.body.classList.remove(`theme-${level + 1}`);
+                    document.body.classList.add(`theme-${level}`);
                     startGame();
                 }
                 elements.levelTime.textContent = time;
@@ -381,7 +405,8 @@
             levelTime = 20;
             totalTime = 0;
             elements.level.textContent = level;
-            document.body.className = 'theme-1';
+            document.body.classList.remove(`theme-${level + 1}`);
+            document.body.classList.add('theme-1');
             elements.message.textContent = '';
             startGame();
         }
