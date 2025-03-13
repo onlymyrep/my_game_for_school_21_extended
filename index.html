@@ -45,7 +45,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: calc(14px + 1.5vmin);
+            font-size: calc(12px + 1.5vmin);
             background: #e0e0e0;
             border-radius: 4px;
             cursor: pointer;
@@ -83,7 +83,6 @@
 <body class="theme-1">
     <audio id="music" loop preload="none">
         <source src="bg.mp3" type="audio/mpeg">
-	<source src="bg.ogg" type="audio/ogg">
     </audio>
     
     <div class="container">
@@ -96,7 +95,7 @@
     </div>
 
     <script>
-        const emojis = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷"];
+        const emojis = ["😊", "😎", "🤩", "🥳", "😍", "🤗", "😇", "😜", "🤪", "😏", "😌", "😴", "🤠"];
         let level = 1, boardSize = 3, selectedCell = null;
         let levelTime = 20, totalTime = 0, maxLevel = 7;
         let timerInterval, totalTimeInterval;
@@ -112,18 +111,50 @@
             hintText: document.getElementById('hintText')
         };
 
+        const hints = [
+            "строка",    // Уровень 1
+            "столбец",   // Уровень 2
+            "периметр",  // Уровень 3
+            "угол",      // Уровень 4
+            "крест",     // Уровень 5
+            "буква s",   // Уровень 6
+            "буква c"    // Уровень 7
+        ];
+
+        function caesarCipher(word, shift) {
+            const rusAlphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+            return word
+                .toLowerCase()
+                .split('')
+                .map(char => {
+                    const index = rusAlphabet.indexOf(char);
+                    if (index !== -1) {
+                        const newIndex = (index + shift) % rusAlphabet.length;
+                        return rusAlphabet[newIndex];
+                    } else {
+                        return char; // Оставляем пробелы и другие символы без изменений
+                    }
+                })
+                .join('');
+        }
+
+        function updateHint() {
+            const encryptedHint = caesarCipher(hints[level - 1], level);
+            elements.hintText.textContent = encryptedHint;
+        }
+
         function createBoard() {
             elements.board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
             elements.board.innerHTML = '';
             
             const emojiSet = Array(boardSize).fill()
                 .flatMap(() => {
-                    const emoji = emojis[Math.random()*emojis.length|0];
+                    const emoji = emojis[Math.random() * emojis.length | 0];
                     return Array(boardSize).fill(emoji);
                 })
                 .sort(() => Math.random() - 0.5);
 
-            for(let i = 0; i < boardSize**2; i++) {
+            for (let i = 0; i < boardSize ** 2; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.textContent = emojiSet[i];
@@ -133,14 +164,14 @@
         }
 
         function handleClick(index) {
-            if(!timerInterval) return;
+            if (!timerInterval) return;
             
             const cells = elements.board.children;
             const row = Math.floor(index / boardSize);
             const col = index % boardSize;
             
-            if(!selectedCell) {
-                selectedCell = {row, col, index};
+            if (!selectedCell) {
+                selectedCell = { row, col, index };
                 cells[index].classList.add('selected');
                 return;
             }
@@ -148,53 +179,135 @@
             const first = cells[selectedCell.index];
             const second = cells[index];
             
-            [first.textContent, second.textContent] = 
-            [second.textContent, first.textContent];
+            [first.textContent, second.textContent] = [second.textContent, first.textContent];
             
             first.classList.remove('selected');
             selectedCell = null;
             
-            if(checkWin()) handleWin();
+            if (checkWin()) handleWin();
         }
 
         function checkWin() {
             const cells = elements.board.children;
-            for(let i = 0; i < boardSize; i++) {
-                const rowStart = i * boardSize;
-                const first = cells[rowStart].textContent;
-                for(let j = 1; j < boardSize; j++) {
-                    if(cells[rowStart + j].textContent !== first) return false;
-                }
+
+            switch (level) {
+                case 1:
+                    // Уровень 1: Все эмодзи в строке должны быть одинаковыми
+                    for (let i = 0; i < boardSize; i++) {
+                        const rowStart = i * boardSize;
+                        const first = cells[rowStart].textContent;
+                        for (let j = 1; j < boardSize; j++) {
+                            if (cells[rowStart + j].textContent !== first) return false;
+                        }
+                    }
+                    return true;
+
+                case 2:
+                    // Уровень 2: Все эмодзи в столбце должны быть одинаковыми
+                    for (let j = 0; j < boardSize; j++) {
+                        const first = cells[j].textContent;
+                        for (let i = 1; i < boardSize; i++) {
+                            if (cells[i * boardSize + j].textContent !== first) return false;
+                        }
+                    }
+                    return true;
+
+                case 3:
+                    // Уровень 3: Периметры из одинаковых эмодзи
+                    if (boardSize < 3) return false;
+
+                    // Внешний периметр
+                    const outerPerimeter = [];
+                    for (let i = 0; i < boardSize; i++) {
+                        outerPerimeter.push(i); // Верхняя строка
+                        outerPerimeter.push((boardSize - 1) * boardSize + i); // Нижняя строка
+                        if (i > 0 && i < boardSize - 1) {
+                            outerPerimeter.push(i * boardSize); // Левый столбец
+                            outerPerimeter.push(i * boardSize + (boardSize - 1)); // Правый столбец
+                        }
+                    }
+
+                    const firstOuter = cells[outerPerimeter[0]].textContent;
+                    for (const index of outerPerimeter) {
+                        if (cells[index].textContent !== firstOuter) return false;
+                    }
+
+                    // Внутренний периметр (если размер поля >= 5)
+                    if (boardSize >= 5) {
+                        const innerPerimeter = [];
+                        for (let i = 1; i < boardSize - 1; i++) {
+                            innerPerimeter.push(i + boardSize); // Верхняя строка
+                            innerPerimeter.push(i + (boardSize - 2) * boardSize); // Нижняя строка
+                            if (i > 1 && i < boardSize - 2) {
+                                innerPerimeter.push(i * boardSize + 1); // Левый столбец
+                                innerPerimeter.push(i * boardSize + (boardSize - 2)); // Правый столбец
+                            }
+                        }
+
+                        const firstInner = cells[innerPerimeter[0]].textContent;
+                        for (const index of innerPerimeter) {
+                            if (cells[index].textContent !== firstInner) return false;
+                        }
+                    }
+
+                    return true;
+
+                case 4:
+                    // Уровень 4: Углы из одинаковых эмодзи
+                    const firstCorner = cells[0].textContent;
+                    const secondCorner = cells[boardSize - 1].textContent;
+                    const thirdCorner = cells[(boardSize - 1) * boardSize].textContent;
+                    const fourthCorner = cells[boardSize * boardSize - 1].textContent;
+
+                    if (
+                        cells[0].textContent !== firstCorner ||
+                        cells[boardSize - 1].textContent !== secondCorner ||
+                        cells[(boardSize - 1) * boardSize].textContent !== thirdCorner ||
+                        cells[boardSize * boardSize - 1].textContent !== fourthCorner
+                    ) {
+                        return false;
+                    }
+
+                    return true;
+
+                default:
+                    return false;
             }
-            return true;
         }
 
         function handleWin() {
             clearInterval(timerInterval);
-            if(level === maxLevel) {
+            if (level === maxLevel) {
                 elements.message.textContent = `Победа! Время: ${totalTime}с`;
                 clearInterval(totalTimeInterval);
                 return;
             }
-            
-            level++;
-            boardSize++;
-            levelTime += 10;
-            elements.level.textContent = level;
-            document.body.className = `theme-${level}`;
-            startGame();
+
+            // Выводим сообщение о шаге к school_21
+            elements.message.textContent = "Вы на шаг ближе к school_21";
+
+            // Задержка перед переходом на следующий уровень
+            setTimeout(() => {
+                level++;
+                boardSize++;
+                levelTime += 10;
+                elements.level.textContent = level;
+                document.body.className = `theme-${level}`;
+                elements.message.textContent = ""; // Очищаем сообщение
+                startGame();
+            }, 2000); // Задержка 2 секунды
         }
 
         function startTimer() {
             let time = levelTime;
             elements.levelTime.textContent = time;
-            
+
             timerInterval = setInterval(() => {
-                if(--time <= 0) {
+                if (--time <= 0) {
                     clearInterval(timerInterval);
-                    if(level === 1) {
+                    if (level === 1) {
                         elements.message.textContent = 'Тапните для перезапуска';
-                        document.addEventListener('click', restartGame, {once: true});
+                        document.addEventListener('click', restartGame, { once: true });
                         return;
                     }
                     level--;
@@ -213,18 +326,19 @@
             clearInterval(totalTimeInterval);
             createBoard();
             startTimer();
+            updateHint(); // Обновляем подсказку
             totalTimeInterval = setInterval(() => {
                 totalTime++;
                 elements.totalTimeValue.textContent = totalTime;
             }, 1000);
-            if(!musicStarted) {
+            if (!musicStarted) {
                 elements.music.play().then(() => {
                     musicStarted = true;
                 }).catch(() => {
                     document.addEventListener('click', () => {
                         elements.music.play();
                         musicStarted = true;
-                    }, {once: true});
+                    }, { once: true });
                 });
             }
         }
@@ -245,8 +359,8 @@
         });
 
         document.addEventListener('touchstart', (e) => {
-            if(e.touches.length > 1) e.preventDefault();
-        }, {passive: true});
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: true });
 
         document.addEventListener('gesturestart', (e) => e.preventDefault());
     </script>
