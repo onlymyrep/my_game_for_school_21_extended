@@ -69,13 +69,52 @@
             font-size: 0.9em;
         }
 
-        .theme-1 { background: #f0f0f0; color: #333; }
-        .theme-2 { background: #ffebee; color: #c62828; }
-        .theme-3 { background: #e3f2fd; color: #1565c0; }
-        .theme-4 { background: #e8f5e9; color: #2e7d32; }
-        .theme-5 { background: #fff3e0; color: #ef6c00; }
-        .theme-6 { background: #f3e5f5; color: #8e24aa; }
-        .theme-7 { background: #eceff1; color: #37474f; }
+	body.theme-1 {
+	    background-color: #6f4e37; /* Кофейный */
+	    color: #f5f5f5;
+	}
+
+	body.theme-2 {
+	    background-color: #5d4037; /* Темно-коричневый */
+	    color: #f5f5f5;
+	}
+
+	body.theme-3 {
+	    background-color: #4e342e; /* Шоколадный */
+	    color: #f5f5f5;
+	}
+
+	body.theme-4 {
+	    background-color: #3e2723; /* Глубокий коричневый */
+	    color: #f5f5f5;
+	}
+
+	body.theme-5 {
+	    background-color: #8d6e63; /* Светло-коричневый */
+	    color: #f5f5f5;
+	}
+
+	body.theme-6 {
+	    background-color: #a1887f; /* Бежево-коричневый */
+	    color: #f5f5f5;
+	}
+
+	body.theme-7 {
+	    background-color: #bcaaa4; /* Светлый бежевый */
+	    color: #333;
+	}
+
+	#matrixText {
+	    position: fixed;
+	    top: 50%;
+	    left: 50%;
+	    transform: translate(-50%, -50%);
+	    font-size: 24px;
+	    font-family: monospace;
+	    color: #00ff00;
+	    display: none;
+	    z-index: 1000;
+	}
 
         audio { display: none; }
     </style>
@@ -95,7 +134,7 @@
     </div>
 
     <script>
-	const emojis = ["😊", "😎", "🤩", "🥳", "😍", "🤗", "😇", "😜", "🤪", "😏", "😌", "😴", "🤠"];
+	const emojis = ["🍕", "🍔", "🍟", "🌮", "🍣", "🍩", "🍪", "🍫", "🍰", "🍦", "🍧", "🍎", "🍇"];
 	let level = 1, boardSize = 3, selectedCell = null;
 	let levelTime = 20, totalTime = 0, maxLevel = 7;
 	let timerInterval, totalTimeInterval;
@@ -108,7 +147,8 @@
 	    levelTime: document.getElementById('levelTime'),
 	    totalTimeValue: document.getElementById('totalTimeValue'),
 	    music: document.getElementById('music'),
-	    hintText: document.getElementById('hintText')
+	    hintText: document.getElementById('hintText'),
+	    matrixText: document.getElementById('matrixText')
 	};
 
 	const hints = [
@@ -128,6 +168,25 @@
 	        const index = rusAlphabet.indexOf(char);
 	        return index !== -1 ? rusAlphabet[(index + shift) % rusAlphabet.length] : char;
 	    }).join('');
+	}
+
+	// Анимация "матрицы" перед началом уровня
+	function showMatrixAnimation() {
+	    elements.matrixText.textContent = generateRandomSymbols(50);
+	    elements.matrixText.style.display = 'block';
+	    setTimeout(() => {
+	        elements.matrixText.style.display = 'none';
+	    }, 1000);
+	}
+
+	// Генерация случайных символов для анимации "матрицы"
+	function generateRandomSymbols(length) {
+	    const symbols = "!@#$%^&*()_+{}|:<>?[];',./`~";
+	    let result = '';
+	    for (let i = 0; i < length; i++) {
+	        result += symbols[Math.floor(Math.random() * symbols.length)];
+	    }
+	    return result;
 	}
 
 	// Подсветка уровня и подсказки
@@ -165,47 +224,11 @@
 	    
 	    let emojiSet = Array(boardSize * boardSize).fill(null);
 
-	    if (level === 3 && boardSize === 7) {
-	        // Генерация для уровня 3 (7x7)
-	        const types = [
-	            ...Array(16).fill(emojis[0]),  // Внешний периметр
-	            ...Array(8).fill(emojis[1]),   // Внутренний периметр
-	            emojis[2]                     // Центр
-	        ];
-	        
-	        let typeIndex = 0;
-	        
-	        // Заполнение внешнего периметра
-	        for (let i = 0; i < boardSize; i++) {
-	            emojiSet[i] = types[typeIndex]; // Верхняя строка
-	            emojiSet[6 * boardSize + i] = types[typeIndex]; // Нижняя строка
-	        }
-	        for (let i = 1; i < boardSize - 1; i++) {
-	            emojiSet[i * boardSize] = types[typeIndex]; // Левый столбец
-	            emojiSet[i * boardSize + 6] = types[typeIndex]; // Правый столбец
-	        }
-	        typeIndex++;
-	        
-	        // Заполнение внутреннего периметра
-	        for (let i = 1; i < boardSize - 1; i++) {
-	            emojiSet[1 * boardSize + i] = types[typeIndex]; // Вторая строка
-	            emojiSet[5 * boardSize + i] = types[typeIndex]; // Предпоследняя строка
-	        }
-	        for (let i = 2; i < boardSize - 2; i++) {
-	            emojiSet[i * boardSize + 1] = types[typeIndex]; // Второй столбец
-	            emojiSet[i * boardSize + 5] = types[typeIndex]; // Предпоследний столбец
-	        }
-	        typeIndex++;
-	        
-	        // Заполнение центра
-	        emojiSet[3 * boardSize + 3] = types[typeIndex]; // Центральная клетка
-	    } else {
-	        // Стандартная генерация для других уровней
-	        emojiSet = Array(boardSize).fill().flatMap(() => {
-	            const emoji = emojis[Math.random() * emojis.length | 0];
-	            return Array(boardSize).fill(emoji);
-	        }).sort(() => Math.random() - 0.5);
-	    }
+	    // Заполнение поля случайными эмодзи
+	    emojiSet = Array(boardSize).fill().flatMap(() => {
+	        const emoji = emojis[Math.random() * emojis.length | 0];
+	        return Array(boardSize).fill(emoji);
+	    }).sort(() => Math.random() - 0.5);
 
 	    // Создание ячеек
 	    for (let i = 0; i < boardSize ** 2; i++) {
@@ -216,7 +239,7 @@
 	        elements.board.appendChild(cell);
 	    }
 	}
-	
+
 	function handleClick(index) {
 	    if (!timerInterval) return;
 	    
@@ -269,34 +292,17 @@
 	            return true;
 
 	        case 3:
-	            // Проверка вложенных периметров
-	            const expectedCounts = [16, 8, 1];
-	            const layers = [];
-	            
-	            // Собираем данные по слоям
-	            for (let layer = 0; layer < 3; layer++) {
-	                const layerCells = [];
-	                const start = layer;
-	                const end = boardSize - 1 - layer;
-	                
-	                for (let i = start; i <= end; i++) {
-	                    layerCells.push(cells[start * boardSize + i].textContent);
-	                    layerCells.push(cells[end * boardSize + i].textContent);
-	                }
-	                
-	                for (let i = start + 1; i < end; i++) {
-	                    layerCells.push(cells[i * boardSize + start].textContent);
-	                    layerCells.push(cells[i * boardSize + end].textContent);
-	                }
-	                
-	                layers.push(layerCells);
+	            // Проверка периметра
+	            const perimeter = [];
+	            for (let i = 0; i < boardSize; i++) {
+	                perimeter.push(cells[i].textContent); // Верхняя строка
+	                perimeter.push(cells[(boardSize - 1) * boardSize + i].textContent); // Нижняя строка
 	            }
-	            
-	            // Проверяем каждый слой
-	            return layers.every((layer, index) => {
-	                const unique = new Set(layer);
-	                return unique.size === 1 && layer.length === expectedCounts[index];
-	            });
+	            for (let i = 1; i < boardSize - 1; i++) {
+	                perimeter.push(cells[i * boardSize].textContent); // Левый столбец
+	                perimeter.push(cells[i * boardSize + (boardSize - 1)].textContent); // Правый столбец
+	            }
+	            return new Set(perimeter).size === 1;
 
 	        default:
 	            return false;
@@ -314,7 +320,7 @@
 	    elements.message.textContent = "Вы на шаг ближе к school_21";
 	    setTimeout(() => {
 	        level++;
-	        boardSize = level === 3 ? 7 : boardSize + 1;
+	        boardSize++;
 	        levelTime += 10;
 	        elements.level.textContent = level;
 	        document.body.className = `theme-${level}`;
@@ -336,7 +342,7 @@
 	                return;
 	            }
 	            level--;
-	            boardSize = level === 3 ? 7 : boardSize - 1;
+	            boardSize--;
 	            levelTime -= 10;
 	            elements.level.textContent = level;
 	            document.body.className = `theme-${level}`;
@@ -349,23 +355,18 @@
 	function startGame() {
 	    clearInterval(timerInterval);
 	    clearInterval(totalTimeInterval);
+	    showMatrixAnimation(); // Анимация "матрицы"
+	    updateHint();
 	    createBoard();
 	    startTimer();
-	    updateHint();
 	    totalTimeInterval = setInterval(() => {
 	        totalTime++;
 	        elements.totalTimeValue.textContent = totalTime;
 	    }, 1000);
 	    
 	    if (!musicStarted) {
-	        elements.music.play()
-	            .then(() => musicStarted = true)
-	            .catch(() => {
-	                document.addEventListener('click', () => {
-	                    elements.music.play();
-	                    musicStarted = true;
-	                }, { once: true });
-	            });
+	        elements.music.play();
+	        musicStarted = true;
 	    }
 	}
 
@@ -375,20 +376,16 @@
 	    levelTime = 20;
 	    totalTime = 0;
 	    elements.level.textContent = level;
-	    elements.totalTimeValue.textContent = totalTime;
-	    document.body.className = `theme-${level}`;
+	    document.body.className = 'theme-1';
+	    elements.message.textContent = '';
 	    startGame();
 	}
 
-	// Инициализация
-	document.addEventListener('DOMContentLoaded', () => {
-	    startGame();
-	    initParallax();
-	});
-	document.addEventListener('touchstart', (e) => {
-	    if (e.touches.length > 1) e.preventDefault();
-	}, { passive: true });
-	document.addEventListener('gesturestart', (e) => e.preventDefault());
+	// Инициализация игры
+	initParallax();
+	startGame();
+
+
     </script>
 </body>
 </html>
