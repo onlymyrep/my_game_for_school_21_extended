@@ -45,7 +45,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: calc(12px + 1.5vmin);
+            font-size: calc(14px + 1.5vmin);
             background: #e0e0e0;
             border-radius: 4px;
             cursor: pointer;
@@ -81,8 +81,9 @@
     </style>
 </head>
 <body class="theme-1">
-    <audio id="music" loop>
-        <source src="https://cdn.pixabay.com/audio/2023/10/23/audio_7d3aebfea0.mp3" type="audio/mpeg">
+    <audio id="music" loop preload="none">
+        <source src="bg.mp3" type="audio/mpeg">
+	<source src="bg.ogg" type="audio/ogg">
     </audio>
     
     <div class="container">
