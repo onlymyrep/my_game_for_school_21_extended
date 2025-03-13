@@ -20,19 +20,16 @@
             -webkit-tap-highlight-color: transparent;
             tap-highlight-color: transparent;
         }
-
         .container {
             padding: 10px;
             max-width: 100vw;
             box-sizing: border-box;
         }
-
         h1 {
             font-size: 1.5rem;
             margin: 0 0 1rem;
             text-align: center;
         }
-
         .board {
             display: grid;
             gap: 2px;
@@ -41,7 +38,6 @@
             overflow: auto;
             touch-action: manipulation;
         }
-
         .cell {
             width: 100%;
             padding-top: 100%; /* Квадратные ячейки */
@@ -52,7 +48,6 @@
             user-select: none;
             transition: background 0.15s;
         }
-
         .cell > span {
             position: absolute;
             top: 50%;
@@ -60,11 +55,9 @@
             transform: translate(-50%, -50%);
             font-size: calc(12px + 1.5vmin);
         }
-
         .cell.selected {
             background: #a0a0a0;
         }
-
         #message {
             text-align: center;
             margin: 1rem 0;
